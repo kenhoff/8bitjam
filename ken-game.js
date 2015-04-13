@@ -75,13 +75,15 @@ function create () {
 	
 	
 	spacebarKey.onDown.add(function() {
-		enemies.forEach(function (enemy) {
-			//check all the sprites, see how far away they are
-			if (game.physics.arcade.distanceBetween(player, enemy) < hitDist) {
-				//if they're close enough, enemy.splat
-				enemy.splat()
-			}
-		})
+		if (player.alive) {
+			enemies.forEach(function (enemy) {
+				//check all the sprites, see how far away they are
+				if (game.physics.arcade.distanceBetween(player, enemy) < hitDist) {
+					//if they're close enough, enemy.splat
+					enemy.splat()
+				}
+			})
+		}
 
 	})
 
@@ -145,27 +147,23 @@ function create () {
 			game.add.tween(titleCreditText).to({alpha: 0}, 2000, Phaser.Easing.Linear.None, true)
 			game.add.tween(keys).to({alpha: 0}, 2000, Phaser.Easing.Linear.None, true)
 		}
+		if (player.alive) {
+			explosion = game.add.sprite(player.position.x, player.position.y, 'explosion');
+			explosion.tint = "#000000"
+			explosion.anchor.setTo(0.5, 0.5);
 
-		explosion = game.add.sprite(player.position.x, player.position.y, 'explosion');
-		explosion.tint = "#000000"
-        explosion.anchor.setTo(0.5, 0.5);
+			// Add an animation for the explosion that kills the sprite when the
+			// animation is complete
+			var animation = explosion.animations.add('boom', [0,1,2,3], 60, false);
+			animation.killOnComplete = true;
 
-        // Add an animation for the explosion that kills the sprite when the
-        // animation is complete
-        var animation = explosion.animations.add('boom', [0,1,2,3], 60, false);
-        animation.killOnComplete = true;
+			explosion.angle = this.game.rnd.integerInRange(0, 360);
 
-		explosion.angle = this.game.rnd.integerInRange(0, 360);
-
-		// Play the animation
-		explosion.animations.play('boom');
+			// Play the animation
+			explosion.animations.play('boom');
+		}
 	
 	})
-
-}
-
-function getOffScreenSpawningPoint() {
-
 
 }
 
@@ -180,7 +178,7 @@ function spawnEnemy () {
 	game.physics.arcade.enable(enemy)
 	enemy.anchor.setTo(0.5, 0.5)
 	enemy.body.drag.set(400)
-	enemy.body.maxVelocity.set(350 * 0.75)
+	enemy.body.maxVelocity.set(350 * 0.5)
 	enemy.splat = function () {
 		splat = game.add.sprite(this.position.x, this.position.y, random.pick(["splat1", "splat3", "splat4", "splat5"]))
 		splat.anchor.setTo(0.5, 0.5)
@@ -225,11 +223,44 @@ function spawnEnemy () {
 	}
 }
 
+function respawnPlayer () {
 
+	playerBitmapData = game.add.bitmapData(32, 32)
+
+	playerBitmapData.circle(16, 16, 16)
+	player = game.add.sprite(game.world.width/2, game.world.height/2, playerBitmapData)
+
+	game.physics.arcade.enable(player)
+
+	player.anchor.setTo(0.5, 0.5)
+	player.body.collideWorldBounds = true
+	player.body.drag.set(400)
+	player.body.maxVelocity.set(350)
+	player.bringToTop()
+}
+
+function killAllEnemies () {
+	enemies.forEach(function (enemy) {
+		enemy.kill()
+	})
+}
 
 function update () {
 
-	game.physics.arcade.collide(player, enemies)
+	game.physics.arcade.collide(player, enemies, function (p, e) {
+		splat = game.add.sprite(player.position.x, player.position.y, random.pick(["splat1", "splat3", "splat4", "splat5"]))
+		splat.anchor.setTo(0.5, 0.5)
+		splat.tint = "0x000000"
+		splat.rotation = random.realInRange(0, 6.283)
+		splats.add(splat)
+		splats.bringToTop(splat)
+		player.kill()
+		enemies.forEach(function (enemy) {
+			enemy.direction = -1;
+		})
+		game.time.events.add(3000, respawnPlayer)
+		game.time.events.add(3000, killAllEnemies)
+	})
 	game.physics.arcade.collide(enemies, enemies)
 
 	player.body.acceleration.set(0)
@@ -247,6 +278,12 @@ function update () {
 		player.body.acceleration.add(0, playerSpeed)
 	}
 
+	if (player.alive) {
+		direction = 1;
+	}
+	else {
+		direction = -1	
+	}
 
 	enemies.forEach(function(enemy) {
 		xdiff = player.position.x - enemy.position.x
@@ -255,16 +292,16 @@ function update () {
 		enemy.body.acceleration.set(0)
 
 		if (xdiff > 0) {
-			enemy.body.acceleration.add(enemySpeed, 0)
+			enemy.body.acceleration.add(enemySpeed * direction, 0)
 		}
 		if (xdiff < 0) {
-			enemy.body.acceleration.add(-enemySpeed, 0)
+			enemy.body.acceleration.add(-enemySpeed * direction, 0)
 		}
 		if (ydiff < 0) {
-			enemy.body.acceleration.add(0, -enemySpeed)
+			enemy.body.acceleration.add(0, -enemySpeed * direction)
 		}
 		if (ydiff > 0) {
-			enemy.body.acceleration.add(0, enemySpeed)
+			enemy.body.acceleration.add(0, enemySpeed * direction)
 		}
 	})
 }
