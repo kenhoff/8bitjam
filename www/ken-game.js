@@ -9,11 +9,7 @@ var random = new Phaser.RandomDataGenerator()
 	
 
 splatGoal = 25
-<<<<<<< HEAD
-hitDist = 100
-=======
 hitDist = 125
->>>>>>> master
 playerSpeed = 2000
 //enemySpeed = 0
 enemySpeed = playerSpeed / 2 
