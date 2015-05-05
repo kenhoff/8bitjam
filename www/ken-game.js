@@ -9,7 +9,11 @@ var random = new Phaser.RandomDataGenerator()
 	
 
 splatGoal = 25
+<<<<<<< HEAD
 hitDist = 100
+=======
+hitDist = 125
+>>>>>>> master
 playerSpeed = 2000
 //enemySpeed = 0
 enemySpeed = playerSpeed / 2 
@@ -73,7 +77,6 @@ function create () {
 	
 	spacebarKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 	
-	
 	spacebarKey.onDown.add(function() {
 		if (player.alive) {
 			enemies.forEach(function (enemy) {
@@ -85,6 +88,12 @@ function create () {
 			})
 		}
 
+	})
+
+	backslashKey = game.input.keyboard.addKey(Phaser.Keyboard.BACKWARD_SLASH)
+
+	backslashKey.onDown.add(function () {
+		killAllEnemies()
 	})
 
 
@@ -247,6 +256,8 @@ function killAllEnemies () {
 
 function update () {
 
+
+/*
 	game.physics.arcade.collide(player, enemies, function (p, e) {
 		splat = game.add.sprite(player.position.x, player.position.y, random.pick(["splat1", "splat3", "splat4", "splat5"]))
 		splat.anchor.setTo(0.5, 0.5)
@@ -261,6 +272,8 @@ function update () {
 		game.time.events.add(3000, respawnPlayer)
 		game.time.events.add(3000, killAllEnemies)
 	})
+*/
+	
 	game.physics.arcade.collide(enemies, enemies)
 
 	player.body.acceleration.set(0)
